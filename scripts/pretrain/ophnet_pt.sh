@@ -4,8 +4,8 @@ set -x  # Print commands for debugging
 export MASTER_PORT=$((12000 + $RANDOM % 20000))  # Set a random master port
 export OMP_NUM_THREADS=1  # Control the number of threads
 
-OUTPUT_DIR='/workspace/VideoMAEv2/output'  # Output directory for logs and checkpoints
-DATA_PATH='/workspace/VideoMAEv2/data/pretrain_dataset.csv'  # Path to your dataset CSV
+OUTPUT_DIR='/workspace/videomae/output'  # Output directory for logs and checkpoints
+DATA_PATH='/workspace/videomae/data/pretrain_dataset.csv'  # Path to your dataset CSV
 
 # GPU settings
 GPUS=1
@@ -31,9 +31,9 @@ python -u run_mae_pretraining.py \
     --opt adamw \
     --lr 6e-4 \
     --clip_grad 0.02 \
-    --warmup_epochs 2 \
+    --warmup_epochs 1 \
     --save_ckpt_freq 5 \
-    --epochs 3 \
+    --epochs 1 \
     --log_dir ${OUTPUT_DIR} \
     --output_dir ${OUTPUT_DIR} \
     ${PY_ARGS}
