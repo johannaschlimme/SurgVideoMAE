@@ -281,6 +281,8 @@ def get_model(args):
 
 def main(args):
     utils.init_distributed_mode(args)
+    if args.local_rank != -1:
+        torch.cuda.set_device(args.local_rank)
 
     print(args)
 
@@ -382,8 +384,8 @@ def main(args):
 
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(
-            model, device_ids=[args.gpu], find_unused_parameters=False)
-        model_without_ddp = model.module
+            model, device_ids=[args.local_rank], find_unused_parameters=False
+        )
 
     optimizer = create_optimizer(args, model_without_ddp)
     loss_scaler = NativeScaler()

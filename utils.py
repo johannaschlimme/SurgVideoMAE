@@ -301,7 +301,7 @@ def init_distributed_mode(args):
         args.distributed = False
         return
 
-    args.distributed = True
+    args.distributed = args.world_size > 1 or args.dist_on_itp
 
     torch.cuda.set_device(args.gpu)
     args.dist_backend = 'nccl'
