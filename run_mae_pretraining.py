@@ -12,6 +12,7 @@ import json
 import os
 import random
 import time
+import wandb
 from functools import partial
 from pathlib import Path
 
@@ -37,6 +38,13 @@ def get_args():
     parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--epochs', default=300, type=int)
     parser.add_argument('--save_ckpt_freq', default=50, type=int)
+
+    # WandB arguments
+    parser.add_argument('--wandb_project', default='VideoMAE', type=str, help='WandB project name')
+    parser.add_argument('--wandb_entity', default=None, type=str, help='WandB team/user entity (optional)')
+    parser.add_argument('--wandb_name', default=None, type=str, help='Custom run name in WandB (optional)')
+    parser.add_argument('--wandb', action='store_true', help='Enable Weights & Biases logging')
+
 
     # Model parameters
     parser.add_argument(
@@ -278,6 +286,15 @@ def main(args):
 
     device = torch.device(args.device)
 
+    # Initialize WandB
+    if args.wandb and utils.is_main_process():
+        wandb.init(
+            project=args.wandb_project,
+            entity=args.wandb_entity,
+            name=args.wandb_name,
+            config=vars(args),
+        )
+
     # fix the seed for reproducibility
     seed = args.seed + utils.get_rank()
     torch.manual_seed(seed)
@@ -442,10 +459,16 @@ def main(args):
                     mode="a",
                     encoding="utf-8") as f:
                 f.write(json.dumps(log_stats) + "\n")
+                if args.wandb:
+                    wandb.log(log_stats)
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))
+
+    # End WandB
+    if args.wandb:
+        wandb.finish()
 
 
 if __name__ == '__main__':

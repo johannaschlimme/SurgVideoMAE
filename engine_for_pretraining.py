@@ -7,6 +7,7 @@
 # --------------------------------------------------------'
 import math
 import sys
+import wandb
 from typing import Iterable
 
 import torch
@@ -169,6 +170,19 @@ def train_one_epoch(model: torch.nn.Module,
             log_writer.update(grad_norm=grad_norm, head="opt")
 
             log_writer.set_step()
+
+            if wandb.run is not None:
+                wandb.log({
+                    'train/loss': loss_value,
+                    'train/loss_scale': loss_scale_value,
+                    'train/lr': max_lr,
+                    'train/min_lr': min_lr,
+                    'train/weight_decay': weight_decay_value,
+                    'train/grad_norm': grad_norm,
+                    'train/epoch': epoch,
+                    'train/step': step + start_steps
+                })
+
 
         if lr_scheduler is not None:
             lr_scheduler.step_update(start_steps + step)
