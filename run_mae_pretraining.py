@@ -30,6 +30,7 @@ from engine_for_pretraining import train_one_epoch
 from optim_factory import create_optimizer
 from utils import NativeScalerWithGradNormCount as NativeScaler
 from utils import multiple_pretrain_samples_collate
+import torch._dynamo
 
 
 def get_args():
@@ -475,4 +476,6 @@ if __name__ == '__main__':
     opts = get_args()
     if opts.output_dir:
         Path(opts.output_dir).mkdir(parents=True, exist_ok=True)
+    # Disable DDP Optimizer to avoid "higher order op" error -> only for single GPU training (on DHC Cluster)
+    torch._dynamo.config.optimize_ddp = False
     main(opts)
