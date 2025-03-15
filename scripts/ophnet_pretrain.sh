@@ -1,16 +1,14 @@
 #!/usr/bin/env bash
 set -x  # Print commands for debugging
 
-export MASTER_PORT=$((12000 + $RANDOM % 20000))  # Set a random master port
-export OMP_NUM_THREADS=1  # Control the number of threads
+# Define environment variables (can be overridden by user)
+OUTPUT_DIR="${OUTPUT_DIR:-output}"  # Default: "output"
+DATA_PATH="${DATA_PATH:-data/pretrain_dataset.csv}"  # Default: "data/pretrain_dataset.csv"
 
-OUTPUT_DIR='/workspace/videomae/output'  # Output directory for logs and checkpoints
-DATA_PATH='/workspace/videomae/data/pretrain_dataset.csv'  # Path to your dataset CSV
-
-# GPU settings
-GPUS=1
-GPUS_PER_NODE=1
-CPUS_PER_TASK=4  # Reduce CPU usage for single GPU setup
+# GPU and CPU settings
+GPUS="${GPUS:-1}"
+GPUS_PER_NODE="${GPUS_PER_NODE:-1}"
+CPUS_PER_TASK="${CPUS_PER_TASK:-4}"  # Reduce CPU usage for single GPU setup
 PY_ARGS=${@:1}  # Capture any additional arguments passed to the script
 
 # Run the pretraining script
