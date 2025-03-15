@@ -146,3 +146,4 @@ cython_debug/
 work_dir/
 data/
 output/
+wandb/
