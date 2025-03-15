@@ -31,12 +31,9 @@ python -u run_mae_pretraining.py \
     --opt adamw \
     --lr 6e-4 \
     --clip_grad 0.02 \
-    --warmup_epochs 1 \
-    --save_ckpt_freq 5 \
-    --epochs 1 \
+    --warmup_epochs 30 \
+    --save_ckpt_freq 25 \
+    --epochs 300 \
     --log_dir ${OUTPUT_DIR} \
     --output_dir ${OUTPUT_DIR} \
     ${PY_ARGS}
-
-# warm-up: 30
-# epochs: 300
