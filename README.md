@@ -36,7 +36,11 @@ python data/preproc_pretrain_ophnet.py --ophnet_video_dir /path/to/ophnet_video_
 ```
 
 ### Preprocessing for Cataract Data (Fine-Tuning)
-Currently, fine-tuning for cataract phase recognition is under development.
+Run the script to preprocess **Cataract data** for fine-tuning for phase recognition:
+
+```sh
+python data/preproc_finetune_cataract_phase.py --cataract_video_dir /path/to/cataract_video_files --cataract_annotations_csv /path/to/cataract_annotations --output_dir path/to/preprocessed_output_directory
+```
 
 ## Running Pretraining
 To run VideoMAE pretraining on **OphNet data**, execute:
