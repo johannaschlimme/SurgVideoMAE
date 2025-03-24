@@ -245,12 +245,8 @@ def get_args():
     parser.set_defaults(pin_mem=True)
 
     # distributed training parameters
-    parser.add_argument(
-        '--world_size',
-        default=1,
-        type=int,
-        help='number of distributed processes')
-    parser.add_argument('--local_rank', default=-1, type=int)
+    parser.add_argument('--world_size', default=int(os.environ.get("WORLD_SIZE", 1)), type=int, help='number of distributed processes')
+    parser.add_argument('--local_rank', default=int(os.environ.get("LOCAL_RANK", -1)), type=int)
     parser.add_argument('--dist_on_itp', action='store_true')
     parser.add_argument(
         '--dist_url',
@@ -384,7 +380,10 @@ def main(args):
 
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(
-            model, device_ids=[args.local_rank], find_unused_parameters=False
+            model,
+            device_ids=[args.local_rank],  # Ensures correct GPU assignment
+            output_device=args.local_rank,
+            find_unused_parameters=False
         )
 
     optimizer = create_optimizer(args, model_without_ddp)
