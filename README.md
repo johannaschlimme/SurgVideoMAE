@@ -39,10 +39,15 @@ python data/preproc_pretrain_ophnet.py --ophnet_video_dir /path/to/ophnet_video_
 Currently, fine-tuning for cataract phase recognition is under development.
 
 ## Running Pretraining
-To run VideoMAE pretraining on **OphNet data**, execute:
+To run VideoMAE pretraining on **OphNet data**, use:
 
 ```sh
 bash scripts/ophnet_pretrain.sh
+```
+
+For multi-GPU training using Distributed Data Parallel (DDP):
+```sh
+bash scripts/ophnet_pretrain_ddp.sh
 ```
 
 ## Running Fine-Tuning for Phase Recognition
