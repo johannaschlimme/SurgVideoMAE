@@ -4,10 +4,10 @@ import pandas as pd
 
 OUTPUT_CSV_NAME = "finetune_dataset.csv"
 
-# Function to create CSV rows for Cataract Phase Recognition Fine-tuning
 def process_cataract(cataract_video_dir, cataract_annotations_dir, output_dir):
     """
-    Processes Cataract dataset including annotations for phase recognition and generates CSV file with video paths, annotation and metadata.
+    Processes Cataract dataset annotations for phase recognition and outputs a CSV 
+    with video paths, start index, duration, and label for fine-tuning.
     """
     rows = []
 
@@ -16,11 +16,11 @@ def process_cataract(cataract_video_dir, cataract_annotations_dir, output_dir):
         if not os.path.isdir(case_path):
             continue
 
-        # Define paths for annotation files
+        # Define annotation files
         phase_csv = os.path.join(case_path, f"{case_folder}_annotations_phases.csv")
         video_csv = os.path.join(case_path, f"{case_folder}_video.csv")
 
-        # Check if required annotation files exist
+        # Check if necessary files exist
         if not os.path.exists(phase_csv):
             print(f"Warning: Missing phase annotations for {case_folder}. Skipping.")
             continue
@@ -28,55 +28,60 @@ def process_cataract(cataract_video_dir, cataract_annotations_dir, output_dir):
             print(f"Warning: Missing video metadata for {case_folder}. Skipping.")
             continue
 
-        # Load video metadata to get FPS
-        video_metadata = pd.read_csv(video_csv)
+        # Read FPS from video metadata
         try:
-            fps = float(video_metadata["fps"].iloc[0])  # Ensure FPS is correctly read
-        except (KeyError, ValueError, IndexError) as e:
-            print(f"Warning: Error reading FPS for {case_folder}. Skipping. Error: {e}")
+            video_metadata = pd.read_csv(video_csv)
+            fps = float(video_metadata["fps"].iloc[0])
+        except Exception as e:
+            print(f"Warning: Failed to read FPS from {video_csv}: {e}. Skipping.")
             continue
 
-        # Load phase annotations
-        phase_data = pd.read_csv(phase_csv)
-
-        # Debugging: Ensure 'frame' column exists
-        if "frame" not in phase_data.columns:
-            print(f"Error: Expected 'frame' column missing in {phase_csv}")
-            print(f"Available columns: {list(phase_data.columns)}")
+        # Read phase annotations
+        try:
+            phase_data = pd.read_csv(phase_csv)
+        except Exception as e:
+            print(f"Warning: Failed to read phase data from {phase_csv}: {e}. Skipping.")
             continue
 
-        # Construct the video path
-        video_path = os.path.abspath(os.path.join(cataract_video_dir, f"{case_folder}.mp4"))
+        if "frame" not in phase_data.columns or "endFrame" not in phase_data.columns or "comment" not in phase_data.columns:
+            print(f"Error: Missing required columns in {phase_csv}. Skipping.")
+            continue
+
+        # Construct video path
+        video_filename = f"{case_folder}.mp4"
+        video_path = os.path.abspath(os.path.join(cataract_video_dir, video_filename))
 
         if not os.path.exists(video_path):
-            print(f"Warning: Video {video_path} not found for {case_folder}. Skipping.")
+            print(f"Warning: Video file not found: {video_path}. Skipping.")
             continue
 
-        # Add rows for each phase annotation
+        # Extract phase segments
         for _, row in phase_data.iterrows():
             try:
-                start_frame = int(row["frame"])  # Fixed column name
-                total_frames = -1  # Placeholder for full video
+                start_frame = int(row["frame"])
+                end_frame = int(row["endFrame"])
+                label = str(row["comment"]).strip().lower().replace(" ", "_")
 
-                # Append data
+                if end_frame <= start_frame:
+                    continue
+
                 rows.append([
-                    os.path.abspath(video_path),
+                    video_path,
                     start_frame,
-                    total_frames,
-                    -1  # Placeholder label (can be updated if needed)
+                    end_frame,
+                    label
                 ])
-            except (ValueError, KeyError) as e:
-                print(f"Warning: Error processing phase data for {case_folder}. Skipping row. Error: {e}")
+            except Exception as e:
+                print(f"Warning: Error parsing annotation row in {case_folder}: {e}")
                 continue
 
-    # Define output CSV path
+    # Save to output CSV
     os.makedirs(output_dir, exist_ok=True)
-    output_csv_path = os.path.join(output_dir, OUTPUT_CSV_NAME)
+    output_path = os.path.join(output_dir, OUTPUT_CSV_NAME)
+    df = pd.DataFrame(rows, columns=["video_path", "start_frame", "end_frame", "label"])
+    df.to_csv(output_path, sep=' ', header=False, index=False)
+    print(f"Preprocessing complete. CSV saved to: {output_path}")
 
-    # Save data to CSV
-    df = pd.DataFrame(rows, columns=["video_path", "start_index", "total_frames", "label"])
-    df.to_csv(output_csv_path, index=False, sep=' ', header=False)
-    print(f"CSV file created: {output_csv_path}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -84,21 +89,20 @@ if __name__ == "__main__":
         "--cataract_video_dir",
         type=str,
         required=True,
-        help="Path to the directory containing all Cataract trimmed phase videos."
+        help="Path to directory containing the video files (e.g. case_4687.mp4)"
     )
     parser.add_argument(
-        "--cataract_annotations_csv",
+        "--cataract_annotations_dir",
         type=str,
         required=True,
-        help="Path to the Cataract CSV file containing video phase annotations."
+        help="Path to annotation folders containing per-case CSVs"
     )
     parser.add_argument(
         "--output_dir",
         type=str,
         required=True,
-        help="Directory where the output CSV file will be saved."
+        help="Output directory for the generated CSV"
     )
-    
+
     args = parser.parse_args()
-    
-    process_cataract(args.cataract_video_dir, args.cataract_annotations_csv, args.output_dir)
+    process_cataract(args.cataract_video_dir, args.cataract_annotations_dir, args.output_dir)
